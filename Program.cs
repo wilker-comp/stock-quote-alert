@@ -4,10 +4,10 @@ using System;
 using System.Globalization;
 
 namespace StockQuoteAlert
-{
+{// essa parte aqui eu consegui safar de boa, vi um vídeo no yt e sabia montar o esqueleto
   class Program
   {
-    static void Main(string[] args)
+    static async Task Main(string[] args) //mudar de static void para static async me fez arrancar cabelo, pra mim nao era tao intuitivo...
     {
       if (args.Length != 3)
       {
@@ -41,7 +41,7 @@ namespace StockQuoteAlert
       Console.WriteLine($"Preço alvo para Venda (Azul): {sellTargetPrice:C}");
       Console.WriteLine($"Preço alvo para Compra (Vermelha): {buyTargetPrice:C}");
       Console.WriteLine("-----------------------------------");
-      // --- NOVA PARTE: LENDO CONFIGURAÇÕES ---
+      //essa nova parte pedi ajuda, tanto de IA quanto de um amigo, realmente nao sabia fechar o argumento
       Console.WriteLine("\nCarregando configurações do appsettings.json...");
 
       IConfigurationRoot configuration = new ConfigurationBuilder()
@@ -62,6 +62,30 @@ namespace StockQuoteAlert
       Console.WriteLine($"Alvos serão enviados para: {destEmail}");
       Console.WriteLine($"Servidor SMTP configurado: {smtpServer}:{smtpPortStr}");
       Console.WriteLine("Configurações carregadas com sucesso!\n");
+
+      // essa parte de testar api ja havia feito antes, porem em python pedi ajuda na escrita porem a logica mantem
+      string? apiToken = configuration["ApiSettings:BrapiToken"];
+      if (string.IsNullOrEmpty(apiToken))
+      {
+        Console.WriteLine("Erro: Token da API não encontrado no appsettings.json.");
+        return;
+      }
+
+      Console.WriteLine("Consultando preço atual na B3...");
+
+      StockApiClient apiClient = new StockApiClient(apiToken);
+
+      try
+      {
+        // so chama a api e passa o ativo
+        decimal currentPrice = await apiClient.GetCurrentPriceAsync(asset);
+        Console.WriteLine($"\n--> O preço atual de {asset} é: {currentPrice:C} <--");
+      }
+      catch
+      {
+        Console.WriteLine("Encerrando programa devido a erro na API.");
+        return;
+      }
     }
   }
 }
