@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Microsoft.Extensions.Configuration;
+using System.IO;
+using System;
 using System.Globalization;
 
 namespace StockQuoteAlert
@@ -39,6 +41,27 @@ namespace StockQuoteAlert
       Console.WriteLine($"Preço alvo para Venda (Azul): {sellTargetPrice:C}");
       Console.WriteLine($"Preço alvo para Compra (Vermelha): {buyTargetPrice:C}");
       Console.WriteLine("-----------------------------------");
+      // --- NOVA PARTE: LENDO CONFIGURAÇÕES ---
+      Console.WriteLine("\nCarregando configurações do appsettings.json...");
+
+      IConfigurationRoot configuration = new ConfigurationBuilder()
+          .SetBasePath(Directory.GetCurrentDirectory())
+          .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+          .Build();
+
+      string? destEmail = configuration["EmailSettings:DestinationEmail"];
+      string? smtpServer = configuration["EmailSettings:SmtpServer"];
+      string? smtpPortStr = configuration["EmailSettings:SmtpPort"];
+
+      if (string.IsNullOrEmpty(destEmail) || string.IsNullOrEmpty(smtpServer) || string.IsNullOrEmpty(smtpPortStr))
+      {
+        Console.WriteLine("Erro: Configurações de e-mail incompletas no appsettings.json.");
+        return;
+      }
+
+      Console.WriteLine($"Alvos serão enviados para: {destEmail}");
+      Console.WriteLine($"Servidor SMTP configurado: {smtpServer}:{smtpPortStr}");
+      Console.WriteLine("Configurações carregadas com sucesso!\n");
     }
   }
 }
